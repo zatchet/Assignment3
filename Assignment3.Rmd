@@ -1,0 +1,69 @@
+---
+title: "Assignment3"
+author: "Zach Rippas"
+date: "2/7/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In this assignment, I'll be taking a look at some spacial data on bodies of water in the Greater Boston area.
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(sf)
+
+boston_water <- st_read("Hydrography_(Polygon)/Hydrography_(Polygon).shp")
+```
+
+Let's plot the data using ggplot to see what we're working with.
+```{r}
+ggplot() + geom_sf(data = boston_water)
+```
+
+Now, I'd look to visualize the area of these different bodies of water using gradient fills. First, let's set the area attribute to the log of the area so that the different areas or more easily differentiable.
+
+```{r}
+boston_water$ShapeSTAre <- log(
+  as.numeric(
+    as.character(
+      boston_water$ShapeSTAre)) + 10) 
+```
+
+Now, let's create a chlorepleth showing the areas of different bodies water.
+```{r}
+water <- ggplot(boston_water) + 
+  geom_sf() + 
+  aes(fill=ShapeSTAre) + 
+  scale_fill_gradient2(midpoint = median(boston_water$ShapeSTAre), mid = "red", high = "blue") +
+  labs(fill = "Log_10 Area")
+water
+```
+
+
+Let's take four different subsets of the data, each representing a major type of body of water, and plot each of them.
+```{r}
+ggplot() + geom_sf(data = subset(boston_water, TYPE == "POND"))
+ggplot() + geom_sf(data = subset(boston_water, TYPE == "STREAM"))
+ggplot() + geom_sf(data = subset(boston_water, TYPE == "WETAREA"))
+ggplot() + geom_sf(data = subset(boston_water, TYPE == "SHORELINE"))
+```
+
+
+Finally let's overlay this data with some tree data points, to see where trees exist relative to bodies of water.
+```{r}
+trees <- st_read("Trees/Trees.shp")
+tree_map <- ggplot() + geom_sf(data=trees, size = 0.01, color = "green4")
+tree_map
+
+tree_water_map <- tree_map + geom_sf(data=boston_water)
+
+tree_water_map
+
+```
+
+
+
